@@ -37,7 +37,8 @@ jobs:
           nmake -f makefile.vc BUILD=release SHARED=0 TARGET_CPU=x64
 
       - name: Set WXWIN
-        run: echo "WXWIN=C:\wx" >> $GITHUB_ENV
+        shell: bash
+        run: echo "WXWIN=C:\wx" >> "$GITHUB_ENV"
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
