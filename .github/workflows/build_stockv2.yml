@@ -25,7 +25,8 @@ jobs:
           if (!(Test-Path C:\wx\include\wx\wx.h)) {
             Invoke-WebRequest -Uri https://github.com/wxWidgets/wxWidgets/archive/refs/tags/v3.2.10.zip -OutFile C:\wx.zip
             Expand-Archive C:\wx.zip -DestinationPath C:\wxsrc -Force
-            Copy-Item -Path C:\wxsrc\wxWidgets-3.2.10\* -Destination C:\wx -Recurse -Force
+            New-Item -ItemType Directory -Force -Path C:\wx | Out-Null
+            Copy-Item -Path C:\wxsrc\wxWidgets-3.2.10\* -Destination C:\wx -Recurse -Force -Container
             Remove-Item C:\wx.zip, C:\wxsrc -Recurse -Force
             Write-Host "wxWidgets source ready"
           } else {
