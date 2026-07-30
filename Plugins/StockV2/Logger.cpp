@@ -87,9 +87,10 @@ LLogger::LLogger()
       m_bAutoFlush(true),
       m_logFilePath(),
       m_logFile(),
-      m_lastLog(),
-      m_mutex()
+      m_lastLog()
 {
+    // 初始化 Win32 临界区(替代 std::mutex, 规避跨 STL ABI 的 Mtx_destroy 崩溃)
+    InitializeCriticalSection(&m_cs);
 // Debug模式默认开启日志
 #ifdef _DEBUG
     m_bEnabled = true;
@@ -143,7 +144,7 @@ void LLogger::SetWriteToFile(bool enable) noexcept
 // 自定义日志路径
 void LLogger::SetLogPath(const wxString &customPath)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    CSCriticalSectionLock lock(&m_cs);
     if (m_logFile.is_open())
         m_logFile.close();
     m_logFilePath = customPath;
@@ -225,7 +226,7 @@ void LLogger::Output(LogLevel level, const char *szFile, const wchar_t *func, in
     // 过滤重复日志
     if (m_bFilterDuplicate)
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
+        CSCriticalSectionLock lock(&m_cs);
         // 非强制输出时，和上一条日志相同则过滤
         if (!ignore_filter && msg == m_lastLog)
         {
@@ -253,7 +254,7 @@ void LLogger::Output(LogLevel level, const char *szFile, const wchar_t *func, in
     // 写入文件
     if (m_bWriteToFile)
     {
-        std::lock_guard<std::mutex> lock(m_mutex); // 线程安全锁
+        CSCriticalSectionLock lock(&m_cs); // 线程安全锁
         if (m_logFile.is_open() && m_bWriteToFile)
         {
             //m_logFile << fullLog << std::endl;

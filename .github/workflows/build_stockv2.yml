@@ -17,7 +17,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: C:\wx\lib\vc_x64_lib
-          key: wxwidgets-3.2.10-lib-x64-v143-pcre2
+          key: wxwidgets-3.2.10-lib-x64-v143-pcre2-md
 
       - name: Clone wxWidgets (with submodules)
         shell: cmd
@@ -34,7 +34,7 @@ jobs:
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           cd /d C:\wx\build\msw
-          nmake -f makefile.vc BUILD=release SHARED=0 TARGET_CPU=x64
+          nmake -f makefile.vc BUILD=release SHARED=0 RUNTIME_LIBRARY=dynamic TARGET_CPU=x64
 
       - name: Set WXWIN
         shell: bash

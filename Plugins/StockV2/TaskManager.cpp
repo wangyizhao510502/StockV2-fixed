@@ -1,6 +1,5 @@
 ﻿#include "pch.h"
 #include "TaskManager.h"
-#include <mutex>
 
 // 静态成员定义已移除: 原静态 m_pInstance/m_mtxInstance 存在 STL ABI 崩溃隐患。
 // 单例实例改为 Instance() 内的堆分配泄漏指针, 见下方实现。
@@ -8,11 +7,15 @@
 LTaskManager::LTaskManager()
     : m_pScheduleThread(nullptr), m_bRunFlag(FALSE), m_nNextTaskID(1)
 {
+    // 初始化 Win32 临界区(替代 std::recursive_mutex, 规避跨 STL ABI 的 Mtx_destroy 崩溃)
+    InitializeCriticalSection(&m_mtxTask);
 }
 
 LTaskManager::~LTaskManager()
 {
     ShutDown();
+    // 单例现已改为堆泄漏对象, 此析构在运行中不会执行; 保留 DeleteCriticalSection 仅为语义完整。
+    DeleteCriticalSection(&m_mtxTask);
 }
 
 LTaskManager *LTaskManager::Instance()
@@ -48,7 +51,7 @@ void LTaskManager::ShutDown()
     }
     {
         // 清空任务列表
-        std::lock_guard<std::recursive_mutex> lock(m_mtxTask);
+        CSCriticalSectionLock lock(&m_mtxTask);
         m_mapTask.clear();
         m_mapKeyToID.clear();
     }
@@ -64,7 +67,7 @@ ULONGLONG LTaskManager::GetTickMs()
 
 LTaskItem *LTaskManager::FindTaskByKey(const std::string &szKey)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_mtxTask);
+    CSCriticalSectionLock lock(&m_mtxTask);
     auto it = m_mapKeyToID.find(szKey);
     if (it == m_mapKeyToID.end())
         return nullptr;
@@ -99,7 +102,7 @@ UINT LTaskManager::ScheduleThread(LPVOID pParam)
     {
         Sleep(POLLING_INTERVAL);
 
-        std::lock_guard<std::recursive_mutex> lock(pMgr->m_mtxTask);
+        CSCriticalSectionLock lock(&pMgr->m_mtxTask);
         ULONGLONG now = pMgr->GetTickMs();
 
         // 巡检所有执行中的任务线程
@@ -195,7 +198,7 @@ UINT LTaskManager::TaskWorkThread(LPVOID pParam)
 
     {
         // 更新状态并获取回调和参数
-        std::lock_guard<std::recursive_mutex> lock(pMgr->m_mtxTask);
+        CSCriticalSectionLock lock(&pMgr->m_mtxTask);
         auto pTask = pMgr->FindTaskByKey(*pKey);
         if (pTask)
         {
@@ -220,7 +223,7 @@ UINT LTaskManager::TaskWorkThread(LPVOID pParam)
         }
     }
     {
-        std::lock_guard<std::recursive_mutex> lock(pMgr->m_mtxTask);
+        CSCriticalSectionLock lock(&pMgr->m_mtxTask);
         auto pTask = pMgr->FindTaskByKey(*pKey);
         if (pTask)
         {
@@ -257,7 +260,7 @@ BOOL LTaskManager::AddTask(const std::string &szKey, UINT nIntervalMs, LTaskCall
         return FALSE;
     }
 
-    std::lock_guard<std::recursive_mutex> lock(m_mtxTask);
+    CSCriticalSectionLock lock(&m_mtxTask);
 
     if (m_mapKeyToID.find(szKey) != m_mapKeyToID.end())
     {
@@ -284,7 +287,7 @@ BOOL LTaskManager::AddTask(const std::string &szKey, UINT nIntervalMs, LTaskCall
 // 删除任务
 BOOL LTaskManager::DeleteTask(const std::string &szKey)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_mtxTask);
+    CSCriticalSectionLock lock(&m_mtxTask);
     m_vecDelKeys.push_back(szKey);
     return TRUE;
 }
@@ -292,7 +295,7 @@ BOOL LTaskManager::DeleteTask(const std::string &szKey)
 // 修改任务间隔
 BOOL LTaskManager::ModifyTaskInterval(const std::string &szKey, UINT nNewIntervalMs)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_mtxTask);
+    CSCriticalSectionLock lock(&m_mtxTask);
     auto pTask = FindTaskByKey(szKey);
     if (!pTask)
         return FALSE;
@@ -305,7 +308,7 @@ BOOL LTaskManager::ModifyTaskInterval(const std::string &szKey, UINT nNewInterva
 // 启用/禁用任务
 BOOL LTaskManager::EnableTask(const std::string &szKey, BOOL bEnable)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_mtxTask);
+    CSCriticalSectionLock lock(&m_mtxTask);
     auto pTask = FindTaskByKey(szKey);
     if (!pTask || pTask->m_bHasError)
     {
@@ -325,7 +328,7 @@ BOOL LTaskManager::EnableTask(const std::string &szKey, BOOL bEnable)
 // 重置任务：清除错误，恢复执行
 BOOL LTaskManager::ResetTask(const std::string &szKey)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_mtxTask);
+    CSCriticalSectionLock lock(&m_mtxTask);
     auto pTask = FindTaskByKey(szKey);
     if (!pTask)
     {
@@ -346,7 +349,7 @@ BOOL LTaskManager::ResetTask(const std::string &szKey)
 std::unique_ptr<LTaskInfo> LTaskManager::GetTaskByKey(const std::string &szKey)
 {
     std::unique_ptr<LTaskInfo> info;
-    std::lock_guard<std::recursive_mutex> lock(m_mtxTask);
+    CSCriticalSectionLock lock(&m_mtxTask);
     auto pTask = FindTaskByKey(szKey);
     if (pTask != nullptr)
     {
@@ -359,7 +362,7 @@ std::unique_ptr<LTaskInfo> LTaskManager::GetTaskByKey(const std::string &szKey)
 std::vector<LTaskInfo> LTaskManager::GetTaskByCallback(LTaskCallback pFunc, LPVOID pParam)
 {
     std::vector<LTaskInfo> res;
-    std::lock_guard<std::recursive_mutex> lock(m_mtxTask);
+    CSCriticalSectionLock lock(&m_mtxTask);
     for (const auto &pair : m_mapTask)
     {
         const auto &item = pair.second;
@@ -379,7 +382,7 @@ std::vector<LTaskInfo> LTaskManager::GetTaskByCallback(LTaskCallback pFunc, LPVO
 std::vector<LTaskInfo> LTaskManager::GetAllTasks()
 {
     std::vector<LTaskInfo> res;
-    std::lock_guard<std::recursive_mutex> lock(m_mtxTask);
+    CSCriticalSectionLock lock(&m_mtxTask);
     for (const auto &pair : m_mapTask)
     {
         LTaskInfo info;
@@ -396,7 +399,7 @@ BOOL LTaskManager::IsTaskExists(LTaskCallback pFunc, LPVOID pParam)
 
 BOOL LTaskManager::IsTaskExists(const std::string &szKey)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_mtxTask);
+    CSCriticalSectionLock lock(&m_mtxTask);
     auto pTask = FindTaskByKey(szKey);
     return pTask != nullptr;
 }

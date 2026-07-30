@@ -12,7 +12,6 @@
 #include <wx/thread.h>
 #include <wx/msgdlg.h>
 #include <process.h>
-#include <mutex>
 
 #include <wx/filesys.h>
 #include <wx/fs_arc.h>

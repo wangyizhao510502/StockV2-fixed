@@ -1,9 +1,26 @@
 ﻿#pragma once
 
 #include <string>
-#include <mutex>
+#include <windows.h>
 #include <fstream>
 #include <iosfwd>
+
+// Win32 临界区 RAII 锁：替代 std::lock_guard<std::mutex>/<std::recursive_mutex>。
+// 彻底规避 std::mutex 在「静态链接第三方库 / 跨 STL 版本」场景下走 MSVCP140 的
+// Mtx_destroy 时因 ABI 不一致导致的启动崩溃(Win11 26200 上本插件的真实事故根因)。
+// CRITICAL_SECTION 是纯系统原语, 本身可重入(同线程可多次 Enter), 与 recursive_mutex 等价。
+class CSCriticalSectionLock
+{
+public:
+    explicit CSCriticalSectionLock(CRITICAL_SECTION *cs) : m_cs(cs) { EnterCriticalSection(m_cs); }
+    ~CSCriticalSectionLock() { LeaveCriticalSection(m_cs); }
+
+    CSCriticalSectionLock(const CSCriticalSectionLock &) = delete;
+    CSCriticalSectionLock &operator=(const CSCriticalSectionLock &) = delete;
+
+private:
+    CRITICAL_SECTION *m_cs;
+};
 
 enum class LogLevel
 {
@@ -63,7 +80,7 @@ private:
     std::wstring m_logFilePath; // 日志文件完整路径
     std::wofstream m_logFile;   // 日志文件句柄
     std::wstring m_lastLog;     // 上一条日志（过滤重复用）
-    std::mutex m_mutex;         // 线程安全锁
+    CRITICAL_SECTION m_cs;      // 线程安全锁(Win32 临界区, 替代 std::mutex)
 
     // 私有构造：单例模式
     LLogger();

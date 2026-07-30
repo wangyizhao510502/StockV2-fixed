@@ -6,7 +6,24 @@
 #include <afxmt.h>
 #include <map>
 #include <memory>
-#include <mutex>
+#include <windows.h>
+
+// Win32 临界区 RAII 锁：替代 std::lock_guard<std::recursive_mutex>。
+// 彻底规避 std::mutex/recursive_mutex 在「静态链接第三方库 / 跨 STL 版本」场景下
+// 走 MSVCP140 的 Mtx_destroy 时因 ABI 不一致导致的启动崩溃(本插件真实事故根因)。
+// CRITICAL_SECTION 同线程可重入, 与 recursive_mutex 等价。
+class CSCriticalSectionLock
+{
+public:
+    explicit CSCriticalSectionLock(CRITICAL_SECTION *cs) : m_cs(cs) { EnterCriticalSection(m_cs); }
+    ~CSCriticalSectionLock() { LeaveCriticalSection(m_cs); }
+
+    CSCriticalSectionLock(const CSCriticalSectionLock &) = delete;
+    CSCriticalSectionLock &operator=(const CSCriticalSectionLock &) = delete;
+
+private:
+    CRITICAL_SECTION *m_cs;
+};
 
 #define g_task LTaskManager::Instance()
 
@@ -61,8 +78,8 @@ class LTaskManager
 {
 private:
     // 禁止静态存储期的 std::mutex(ABI 崩溃隐患, 见 StockV2.h 注释)。
-    // m_mtxTask 是运行时构造的成员锁, 工具链一致时是安全的。
-    std::recursive_mutex m_mtxTask;           // 任务列表线程锁
+    // m_mtxTask 改用 Win32 临界区, 彻底规避 MSVCP140 的 Mtx_destroy 崩溃。
+    CRITICAL_SECTION m_mtxTask;               // 任务列表线程锁(Win32 临界区)
     std::map<UINT, LTaskItem> m_mapTask;      // 内部：系统ID->任务
     std::map<std::string, UINT> m_mapKeyToID; // 内部：KEY->系统ID
     std::vector<std::string> m_vecDelKeys;    // 待删除任务队列
@@ -79,7 +96,7 @@ private:
         TaskAutoResetFlag(LTaskManager *pMgr, const std::string &key)
             : m_pMgr(pMgr), m_taskKey(key)
         {
-            std::lock_guard<std::recursive_mutex> lock(pMgr->m_mtxTask);
+            CSCriticalSectionLock lock(&pMgr->m_mtxTask);
             auto pTask = pMgr->FindTaskByKey(m_taskKey);
             if (pTask)
             {
@@ -90,7 +107,7 @@ private:
 
         ~TaskAutoResetFlag()
         {
-            std::lock_guard<std::recursive_mutex> lock(m_pMgr->m_mtxTask);
+            CSCriticalSectionLock lock(&m_pMgr->m_mtxTask);
             auto pTask = m_pMgr->FindTaskByKey(m_taskKey);
             if (pTask)
             {
