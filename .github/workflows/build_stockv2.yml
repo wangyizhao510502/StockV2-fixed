@@ -17,21 +17,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: C:\wx\lib\vc_x64_lib
-          key: wxwidgets-3.2.10-lib-x64-v143
+          key: wxwidgets-3.2.10-lib-x64-v143-pcre2
 
-      - name: Download wxWidgets source
-        shell: powershell
+      - name: Clone wxWidgets (with submodules)
+        shell: cmd
         run: |
-          if (!(Test-Path C:\wx\include\wx\wx.h)) {
-            Invoke-WebRequest -Uri https://github.com/wxWidgets/wxWidgets/archive/refs/tags/v3.2.10.zip -OutFile C:\wx.zip
-            Expand-Archive C:\wx.zip -DestinationPath C:\wxsrc -Force
-            New-Item -ItemType Directory -Force -Path C:\wx | Out-Null
-            Copy-Item -Path C:\wxsrc\wxWidgets-3.2.10\* -Destination C:\wx -Recurse -Force -Container
-            Remove-Item C:\wx.zip, C:\wxsrc -Recurse -Force
-            Write-Host "wxWidgets source ready"
-          } else {
-            Write-Host "wxWidgets headers already exist"
-          }
+          if not exist C:\wx\include\wx\wx.h (
+            git clone --branch v3.2.10 --depth 1 --recurse-submodules https://github.com/wxWidgets/wxWidgets.git C:\wx
+          ) else (
+            echo wxWidgets already exists, skipping clone
+          )
 
       - name: Build wxWidgets
         if: steps.cache-wx.outputs.cache-hit != 'true'
