@@ -1,0 +1,71 @@
+name: Build StockV2 (fixed) for TrafficMonitor
+
+on:
+  workflow_dispatch:        # 手动在 Actions 页面点 “Run workflow” 触发
+  push:
+    branches: [ master, main ]
+
+jobs:
+  build:
+    runs-on: windows-2022   # 预装 Visual Studio 2022 Enterprise (v143)
+    steps:
+      - name: Checkout 修复后源码
+        uses: actions/checkout@v4
+
+      - name: 缓存 wxWidgets 已编译静态库 (v143 x64)
+        id: cache-wx
+        uses: actions/cache@v4
+        with:
+          path: C:\wx\lib\vc_x64_lib
+          key: wxwidgets-3.2.10-lib-x64-v143
+
+      - name: 下载 wxWidgets 3.2.10 源码 (始终执行，提供头文件；与缓存的 lib 合并)
+        shell: powershell
+        run: |
+          if (!(Test-Path C:\wx\include\wx\wx.h)) {
+            Invoke-WebRequest -Uri https://github.com/wxWidgets/wxWidgets/archive/refs/tags/v3.2.10.zip -OutFile C:\wx.zip
+            Expand-Archive C:\wx.zip -DestinationPath C:\wxsrc -Force
+            Copy-Item -Path C:\wxsrc\wxWidgets-3.2.10\* -Destination C:\wx -Recurse -Force
+            Remove-Item C:\wx.zip, C:\wxsrc -Recurse -Force
+            Write-Host "wxWidgets 源码已就绪"
+          } else {
+            Write-Host "wxWidgets 头文件已存在，跳过下载"
+          }
+
+      - name: 编译 wxWidgets 静态库 (仅缓存未命中时)
+        if: steps.cache-wx.outputs.cache-hit != 'true'
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          cd /d C:\wx\build\msw
+          nmake -f makefile.vc BUILD=release SHARED=0 TARGET_CPU=x64
+
+      - name: 设置 WXWIN 环境变量
+        run: echo "WXWIN=C:\wx" >> $GITHUB_ENV
+
+      - name: 安装 MSBuild
+        uses: actions/setup-msbuild@v2
+
+      - name: 编译 StockV2 (x64 Release, 自动还原 NuGet WebView2)
+        shell: cmd
+        run: |
+          msbuild TrafficMonitorPlugins.sln /p:Configuration=Release /p:Platform=x64 /t:StockV2 /restore /v:minimal
+
+      - name: 收集产物到 dist/
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          # StockV2 插件：重命名为 TrafficMonitor 约定名
+          $sv = Get-ChildItem -Path . -Recurse -Filter StockV2.dll -Exclude *.iobj,*.ipdb,*.ilk | Select-Object -First 1
+          if ($sv) { Copy-Item $sv.FullName dist\StockV2_x64.dll; Write-Host "copied $($sv.FullName)" } else { Write-Host "WARNING: StockV2.dll not found" }
+          # WebView2Loader：来自 NuGet 还原，文件名已正确 (无 _x64)
+          $wv = Get-ChildItem -Path . -Recurse -Filter WebView2Loader.dll -Exclude *.iobj,*.ipdb | Select-Object -First 1
+          if ($wv) { Copy-Item $wv.FullName dist\WebView2Loader.dll; Write-Host "copied $($wv.FullName)" } else { Write-Host "WARNING: WebView2Loader.dll not found" }
+          Get-ChildItem dist | Format-Table Name, Length
+
+      - name: 上传编译产物 (可直接下载)
+        uses: actions/upload-artifact@v4
+        with:
+          name: StockV2_fixed_x64
+          path: dist/*
+          if-no-files-found: warn
