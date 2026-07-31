@@ -361,7 +361,27 @@ void LDataManager::SaveConfig()
     wxString all_stock_datas = UtilStringHlp::vectorJoinString(all_stock_list, ";");
     LLOG_DEBUG("all_stock_datas: %s", all_stock_datas);
     pConfig->Write(KEY_CFG_ALL_STOCK_DATA, all_stock_datas);
-    pConfig->Flush();
+
+    // wxFileConfig::Flush 内部使用 wxTempFile：先写 .tmp，再删除原文件并重命名。
+    // 在部分 Windows 环境下（句柄占用/杀毒扫描/wxWidgets 原子替换 bug）该重命名会失败，
+    // 留下 .tmp 文件并弹出 "Failed to update user configuration file"。
+    // 兜底：Flush 失败后手动删除旧配置文件，再 Flush 一次（此时只需重命名，不再依赖删除旧文件）。
+    if (!pConfig->Flush())
+    {
+        LLOG_WARN(wxT("wxFileConfig::Flush 失败，尝试删除旧配置文件后重写"));
+        wxString cfgPath = GetModuleParentPath() + wxFILE_SEP_PATH + GetModuleName() + wxFILE_SEP_EXT + L"ini";
+        if (wxRemoveFile(cfgPath))
+        {
+            if (!pConfig->Flush())
+            {
+                LLOG_ERROR(wxT("删除旧配置文件后 wxFileConfig::Flush 仍然失败"));
+            }
+        }
+        else
+        {
+            LLOG_ERROR(wxT("无法删除旧配置文件，保存可能未生效"));
+        }
+    }
 
     g_task->ModifyTaskInterval(TASK_KEY_STOCK_AUTO_REFRESH, RealtimeRefreshFreq() * 1000L);
 }
