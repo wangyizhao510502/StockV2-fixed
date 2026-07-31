@@ -71,7 +71,7 @@ void LStockOptionView::InitUI()
     wxSizer *sizer;
 
     // 股票列表
-    wxStaticBox *stockListBox = new wxStaticBox(rootPanel, wxID_ANY, "股票列表");
+    wxStaticBox *stockListBox = new wxStaticBox(rootPanel, wxID_ANY, wxT("股票列表"));
     wxSizer *stockBoxSizer = new wxStaticBoxSizer(stockListBox, wxVERTICAL);
 
     // 股票列表
@@ -85,7 +85,7 @@ void LStockOptionView::InitUI()
     const int col_flag = wxDATAVIEW_COL_REORDERABLE | wxDATAVIEW_COL_RESIZABLE /*| wxDATAVIEW_COL_SORTABLE*/;
 
     wxDataViewColumn *const colMarket = m_stockListCtrl->AppendTextColumn(
-        "市场",
+        wxT("市场"),
         STOCK::LStockListVM::Col_MarketText,
         wxDATAVIEW_CELL_INERT,
         FromDIP(50),
@@ -94,7 +94,7 @@ void LStockOptionView::InitUI()
     colMarket->GetRenderer()->SetAlignment(alignment);
 
     wxDataViewColumn *const colName = m_stockListCtrl->AppendTextColumn(
-        "交易名称",
+        wxT("交易名称"),
         STOCK::LStockListVM::Col_NameText,
         wxDATAVIEW_CELL_INERT,
         wxCOL_WIDTH_AUTOSIZE,
@@ -107,7 +107,7 @@ void LStockOptionView::InitUI()
         MAX_DECIMAL_PLACES,
         wxDATAVIEW_CELL_EDITABLE);
     wxDataViewColumn* colDecimals = new wxDataViewColumn(
-        "保留小数",
+        wxT("保留小数"),
         decimalsRenderer,
         STOCK::LStockListVM::Col_DecimalsText,
         FromDIP(70),
@@ -116,7 +116,7 @@ void LStockOptionView::InitUI()
     m_stockListCtrl->AppendColumn(colDecimals);
 
     wxDataViewColumn *const colCode = m_stockListCtrl->AppendTextColumn(
-        "交易代码",
+        wxT("交易代码"),
         STOCK::LStockListVM::Col_CodeText,
         wxDATAVIEW_CELL_INERT,
         wxCOL_WIDTH_AUTOSIZE,
@@ -128,12 +128,12 @@ void LStockOptionView::InitUI()
 
     stockBoxSizer->AddSpacer(2);
 
-    m_btnAdd = new wxButton(rootPanel, wxID_ANY, "添加");
-    m_btnRemove = new wxButton(rootPanel, wxID_ANY, "删除");
-    m_btnClean = new wxButton(rootPanel, wxID_ANY, "清空");
-    m_btnMoveUP = new wxButton(rootPanel, wxID_ANY, "上移");
-    m_btnMoveDown = new wxButton(rootPanel, wxID_ANY, "下移");
-    m_btnMoveTop = new wxButton(rootPanel, wxID_ANY, "置顶");
+    m_btnAdd = new wxButton(rootPanel, wxID_ANY, wxT("添加"));
+    m_btnRemove = new wxButton(rootPanel, wxID_ANY, wxT("删除"));
+    m_btnClean = new wxButton(rootPanel, wxID_ANY, wxT("清空"));
+    m_btnMoveUP = new wxButton(rootPanel, wxID_ANY, wxT("上移"));
+    m_btnMoveDown = new wxButton(rootPanel, wxID_ANY, wxT("下移"));
+    m_btnMoveTop = new wxButton(rootPanel, wxID_ANY, wxT("置顶"));
 
     sizer = new wxBoxSizer(wxHORIZONTAL);
     sizer->Add(m_btnAdd, 0, wxALIGN_CENTER_VERTICAL | wxALL);
@@ -153,7 +153,7 @@ void LStockOptionView::InitUI()
 
     rootSizer->AddSpacer(10);
 
-    wxStaticBox *settingsBox = new wxStaticBox(rootPanel, wxID_ANY, "设置");
+    wxStaticBox *settingsBox = new wxStaticBox(rootPanel, wxID_ANY, wxT("设置"));
     wxSizer *settingsBoxSizer = new wxStaticBoxSizer(settingsBox, wxVERTICAL);
 
     // 刷新频率
@@ -161,11 +161,11 @@ void LStockOptionView::InitUI()
     // m_autoUpdateCheck = new wxCheckBox(rootPanel, wxID_ANY, "交易时段全天刷新");
     // sizer->Add(m_autoUpdateCheck, 0, wxLEFT | wxALIGN_CENTER_VERTICAL, 0);
     // sizer->AddSpacer(5);
-    sizer->Add(new wxStaticText(rootPanel, wxID_ANY, "刷新间隔:"), 0, wxALIGN_CENTER, 0);
+    sizer->Add(new wxStaticText(rootPanel, wxID_ANY, wxT("刷新间隔:")), 0, wxALIGN_CENTER, 0);
     m_cmbRefreshFreq = new wxComboBox(rootPanel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, COMB_FREQ_OPTS, wxCB_READONLY);
     m_cmbRefreshFreq->SetMinSize(wxSize(50, -1));
     sizer->Add(m_cmbRefreshFreq, 0, wxLEFT | wxRIGHT | wxEXPAND, 5);
-    sizer->Add(new wxStaticText(rootPanel, wxID_ANY, "秒"), 0, wxALIGN_CENTER, 0);
+    sizer->Add(new wxStaticText(rootPanel, wxID_ANY, wxT("秒")), 0, wxALIGN_CENTER, 0);
     settingsBoxSizer->Add(sizer, 0);
 
     settingsBoxSizer->AddSpacer(8);
@@ -185,9 +185,9 @@ void LStockOptionView::InitUI()
                                                wxDefaultPosition, wxDefaultSize,
                                                flags | textFlags,
                                                MIN_KLINE_VIEW_SIZE, MAX_KLINE_VIEW_SIZE, DEFAULT_KLINE_VIEW_H);
-    sizer->Add(new wxStaticText(rootPanel, wxID_ANY, "行情页面 宽:"), 0, wxALIGN_CENTER);
+    sizer->Add(new wxStaticText(rootPanel, wxID_ANY, wxT("行情页面 宽:")), 0, wxALIGN_CENTER);
     sizer->Add(m_KLineViewWidthSpinCtrl, 0, wxLEFT | wxRIGHT, 0);
-    sizer->Add(new wxStaticText(rootPanel, wxID_ANY, " 高:"), 0, wxALIGN_CENTER | wxLEFT, 0);
+    sizer->Add(new wxStaticText(rootPanel, wxID_ANY, wxT(" 高:")), 0, wxALIGN_CENTER | wxLEFT, 0);
     sizer->Add(m_KLineViewHeightSpinCtrl, 0, wxLEFT | wxRIGHT, 5);
     settingsBoxSizer->Add(sizer, 0);
 
@@ -195,9 +195,9 @@ void LStockOptionView::InitUI()
 
     // 功能勾选
     wxBoxSizer *optSizer = new wxBoxSizer(wxHORIZONTAL);
-    m_colorCheck = new wxCheckBox(rootPanel, wxID_ANY, "开启涨跌颜色");
-    m_priorityDisplayChangedCheck = new wxCheckBox(rootPanel, wxID_ANY, "优先显示价格变动");
-    m_isDisplayStockNameCheck = new wxCheckBox(rootPanel, wxID_ANY, "显示股票名称");
+    m_colorCheck = new wxCheckBox(rootPanel, wxID_ANY, wxT("开启涨跌颜色"));
+    m_priorityDisplayChangedCheck = new wxCheckBox(rootPanel, wxID_ANY, wxT("优先显示价格变动"));
+    m_isDisplayStockNameCheck = new wxCheckBox(rootPanel, wxID_ANY, wxT("显示股票名称"));
     // m_alertCheck = new wxCheckBox(rootPanel, wxID_ANY, "价格涨跌幅提醒");
     optSizer->Add(m_colorCheck, 0);
     optSizer->Add(m_priorityDisplayChangedCheck, 0, wxLEFT, 15);
@@ -221,9 +221,9 @@ void LStockOptionView::InitUI()
 
     // 底部按钮
     sizer = new wxBoxSizer(wxHORIZONTAL);
-    m_btnRestoreDefault = new wxButton(rootPanel, wxID_ANY, "恢复");
-    m_btnOk = new wxButton(rootPanel, wxID_ANY, "确定");
-    m_btnCancel = new wxButton(rootPanel, wxID_ANY, "取消");
+    m_btnRestoreDefault = new wxButton(rootPanel, wxID_ANY, wxT("恢复"));
+    m_btnOk = new wxButton(rootPanel, wxID_ANY, wxT("确定"));
+    m_btnCancel = new wxButton(rootPanel, wxID_ANY, wxT("取消"));
     sizer->AddStretchSpacer();
     sizer->Add(m_btnRestoreDefault);
     sizer->Add(m_btnOk, 0, wxLEFT, 15);
@@ -271,7 +271,7 @@ void LStockOptionView::BindAllEvents()
                                    {
         int w = event.GetValue();
         if (w < MIN_KLINE_VIEW_SIZE || w > MAX_KLINE_VIEW_SIZE) {
-            wxMessageBox("无效宽度", "错误");
+            wxMessageBox(wxT("无效宽度"), wxT("错误"));
             return;
         }
         g_data.KLineW(w); });
@@ -279,7 +279,7 @@ void LStockOptionView::BindAllEvents()
                                     {
         int h = event.GetValue();
         if (h < MIN_KLINE_VIEW_SIZE || h > MAX_KLINE_VIEW_SIZE) {
-            wxMessageBox("无效高度", "错误");
+            wxMessageBox(wxT("无效高度"), wxT("错误"));
             return;
         }
         g_data.KLineH(h); });
@@ -297,7 +297,7 @@ void LStockOptionView::BindAllEvents()
             g_data.RealtimeRefreshFreq(freq);
         }
         else {
-            wxMessageBox("无效刷新速率", "错误");
+            wxMessageBox(wxT("无效刷新速率"), wxT("错误"));
             return;
         } });
 
@@ -315,7 +315,7 @@ void LStockOptionView::OnAddStock(wxCommandEvent &)
         {
             if (g_data.GetStockByCode(data->code))
             {
-                wxMessageBox("该股票已在列表中，无需重复添加", "提示", wxICON_INFORMATION);
+                wxMessageBox(wxT("该股票已在列表中，无需重复添加"), wxT("提示"), wxICON_INFORMATION);
             }
             else
             {
@@ -349,7 +349,7 @@ void LStockOptionView::OnDeleteSel(wxCommandEvent &)
 
 void LStockOptionView::OnBatchClear(wxCommandEvent &)
 {
-    if (wxMessageBox("确定清空全部自选股票？", "确认", wxYES_NO | wxICON_QUESTION) != wxYES)
+    if (wxMessageBox(wxT("确定清空全部自选股票？"), wxT("确认"), wxYES_NO | wxICON_QUESTION) != wxYES)
         return;
     g_data.ClearAllCodes();
     m_solVM->Clear();
@@ -434,7 +434,7 @@ void LStockOptionView::OnSaveConfig(wxCommandEvent &)
 {
     if (g_data.IsChangeStockList())
     {
-        wxMessageBox("增删股票条数需要重启宿主程序后才能刷新界面", "温馨提示", wxICON_INFORMATION);
+        wxMessageBox(wxT("增删股票条数需要重启宿主程序后才能刷新界面"), wxT("温馨提示"), wxICON_INFORMATION);
     }
     g_data.SaveConfig();
     Close();
@@ -456,8 +456,8 @@ void LStockOptionView::OnListRightMenu(wxDataViewEvent &event)
         return;
     }
     wxMenu menu;
-    menu.Append(ID_MENU_TOP, "置顶");
-    menu.Append(ID_MENU_DEL, "删除");
+    menu.Append(ID_MENU_TOP, wxT("置顶"));
+    menu.Append(ID_MENU_DEL, wxT("删除"));
     // menu.AppendSeparator();
     // menu.Append(ID_MENU_IMPORT, "批量导入");
     // menu.Append(ID_MENU_EXPORT, "导出列表");

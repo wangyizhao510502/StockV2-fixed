@@ -493,67 +493,67 @@ namespace STOCK
             if (type == "11" || type == "203" || type == "204")
             {
                 // item_display_code = "istock";
-                item_display_code = "A股";
+                item_display_code = wxT("A股");
             }
             else if (type == "12")
             {
                 // item_display_code = "istockB";
-                item_display_code = "B股";
+                item_display_code = wxT("B股");
             }
             else if (type == "202" || type == "201")
             {
                 // item_display_code = "ifund";
-                item_display_code = "基金";
+                item_display_code = wxT("基金");
             }
             else if (type == "31" || type == "32" || type == "33")
             {
                 // item_display_code = "ihkstock";
-                item_display_code = "港股";
+                item_display_code = wxT("港股");
             }
             else if (type == "41")
             {
                 // item_display_code = "iusstock";
-                item_display_code = "美股";
+                item_display_code = wxT("美股");
             }
             else if (type == "77" || type == "78" || type == "79" || type == "102")
             {
                 // item_display_code = "iban";
-                item_display_code = "理财";
+                item_display_code = wxT("理财");
             }
             else if (type == "71")
             {
                 // item_display_code = "iforex";
-                item_display_code = "外汇";
+                item_display_code = wxT("外汇");
             }
             else if (type == "73")
             {
                 // item_display_code = "sanban";
-                item_display_code = "新三板";
+                item_display_code = wxT("新三板");
             }
             else if (type == "81" || type == "120")
             {
                 // item_display_code = "ibond";
-                item_display_code = "债券";
+                item_display_code = wxT("债券");
             }
             else if (type == "85" || type == "86" || type == "87" || type == "88")
             {
                 // item_display_code = "ifutures";
-                item_display_code = "期货";
+                item_display_code = wxT("期货");
             }
             else if (type == "100")
             {
                 // item_display_code = "izhi";
-                item_display_code = "指数";
+                item_display_code = wxT("指数");
             }
             else if (type == "103")
             {
                 // item_display_code = "iukstock";
-                item_display_code = "英股";
+                item_display_code = wxT("英股");
             }
             else if (type == "114")
             {
                 // item_display_code = "ibond";
-                item_display_code = "债券";
+                item_display_code = wxT("债券");
             }
             return item_display_code;
         }

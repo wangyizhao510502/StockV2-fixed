@@ -546,7 +546,7 @@ namespace
 
     void StockWxFrame::OnAbout(wxCommandEvent &)
     {
-        wxMessageBox("该窗口在独立线程中运行，使用编译到动态链接库中的专属wxWidgets实例。",
+        wxMessageBox(wxT("该窗口在独立线程中运行，使用编译到动态链接库中的专属wxWidgets实例。"),
                      "About",
                      wxOK | wxICON_INFORMATION);
     }
@@ -777,9 +777,9 @@ void LStockPlugin::ShowStockViewMenu(void *hWnd, CPoint ptScreen, wxSharedPtr<ST
     m_win->PushEventHandler(new LStockMenuEvtHandler(stock));
 
     wxMenu *menu = new wxMenu;
-    menu->Append(Event_Menu_OpenWeb, "打开Web页面");
+    menu->Append(Event_Menu_OpenWeb, wxT("打开Web页面"));
     menu->AppendSeparator();
-    menu->Append(Event_Menu_OpenStockOption, "管理股票列表");
+    menu->Append(Event_Menu_OpenStockOption, wxT("管理股票列表"));
 
     menu->UpdateUI();
 

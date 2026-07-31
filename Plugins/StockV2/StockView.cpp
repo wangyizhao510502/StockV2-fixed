@@ -119,9 +119,7 @@ namespace LStockViewer
         // K 线窗口不显示, 但股票主功能与 TrafficMonitor 主程序不受影响。
         if (!wxWebView::IsBackendAvailable(wxWebViewBackendEdge))
         {
-            LLOG_ERROR("WebView2(Edge) backend NOT available! "
-                       "请确认: (1) 已安装 Microsoft Edge WebView2 Runtime; "
-                       "(2) WebView2Loader.dll 已去掉 _x64 后缀并放置于 TrafficMonitor 主程序目录。");
+            LLOG_ERROR(wxT("WebView2(Edge) backend NOT available! 请确认: (1) 已安装 Microsoft Edge WebView2 Runtime; (2) WebView2Loader.dll 已去掉 _x64 后缀并放置于 TrafficMonitor 主程序目录。"));
             return nullptr;
         }
 

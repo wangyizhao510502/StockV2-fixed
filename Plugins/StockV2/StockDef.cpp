@@ -66,14 +66,14 @@ namespace STOCK
         case 1:
             if (UtilStringHlp::parseInt(p61) != 0)
             {
-                v49 = "停牌";
+                v49 = wxT("停牌");
             }
             break;
         case 2:
-            v49 = "未上市";
+            v49 = wxT("未上市");
             break;
         case 3:
-            v49 = "退市";
+            v49 = wxT("退市");
             break;
         default:
             v49 = "";
@@ -102,21 +102,21 @@ namespace STOCK
 
     wxString f24(wxString &p55)
     {
-        if (p55 == "富时100指数")
+        if (p55 == wxT("富时100指数"))
         {
-            return "英国富时100";
+            return wxT("英国富时100");
         }
-        else if (p55 == "道琼斯欧元区斯托克50指数")
+        else if (p55 == wxT("道琼斯欧元区斯托克50指数"))
         {
-            return "欧Stoxx50";
+            return wxT("欧Stoxx50");
         }
-        else if (p55 == "澳大利亚标准普尔200指数")
+        else if (p55 == wxT("澳大利亚标准普尔200指数"))
         {
-            return "澳ASX200";
+            return wxT("澳ASX200");
         }
-        else if (p55 == "FTSE/JSE 南非40指数")
+        else if (p55 == wxT("FTSE/JSE 南非40指数"))
         {
-            return "南非JSE40";
+            return wxT("南非JSE40");
         }
         else
         {
@@ -264,7 +264,7 @@ namespace STOCK
             code = "nf_" + p129.Upper();
             if (code == "nf_10000001")
             {
-                code = "nf_" + p129.Upper() + "|50期权";
+                code = "nf_" + p129.Upper() + wxT("|50期权");
             }
         }
         else if (type == "77")
