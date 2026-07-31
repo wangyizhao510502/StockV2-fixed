@@ -23,11 +23,21 @@ jobs:
         shell: cmd
         run: |
           if not exist C:\wx\include\wx\wx.h (
+            :: 缓存可能已恢复 C:\wx\lib\vc_x64_lib; 先临时移出, 避免删除 C:\wx 时丢失。
+            if exist C:\wx\lib\vc_x64_lib (
+              echo Preserving cached wxWidgets libs before clone
+              move C:\wx\lib\vc_x64_lib C:\wx_lib_vc_x64_lib_cache
+            )
             if exist C:\wx (
               echo C:\wx exists but is incomplete, removing before clone
               rmdir /s /q C:\wx
             )
             git clone --branch v3.2.10 --depth 1 --recurse-submodules https://github.com/wxWidgets/wxWidgets.git C:\wx
+            if exist C:\wx_lib_vc_x64_lib_cache (
+              echo Restoring cached wxWidgets libs after clone
+              if not exist C:\wx\lib mkdir C:\wx\lib
+              move C:\wx_lib_vc_x64_lib_cache C:\wx\lib\vc_x64_lib
+            )
           ) else (
             echo wxWidgets already exists, skipping clone
           )
