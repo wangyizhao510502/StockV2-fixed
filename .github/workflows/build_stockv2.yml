@@ -17,7 +17,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: C:\wx\lib\vc_x64_lib
-          key: wxwidgets-3.2.10-lib-x64-v143-pcre2-md
+          key: wxwidgets-3.2.10-lib-x64-v143-pcre2-md-v2
 
       - name: Clone wxWidgets (with submodules)
         shell: cmd
