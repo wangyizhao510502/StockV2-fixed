@@ -5,6 +5,10 @@
 
 const wchar_t *LStockItem::GetItemName() const
 {
+    // index == -1 表示"未配置股票"占位项, 用于引导用户到"管理股票列表"。
+    if (index < 0) {
+        return L"股票插件（未配置股票）";
+    }
     auto data = g_data.GetStockByIndex(index);
     if (data) {
         return data->name;
@@ -14,10 +18,12 @@ const wchar_t *LStockItem::GetItemName() const
 
 const wchar_t *LStockItem::GetItemId() const
 {
-    static std::wstring item_id;
-    item_id = L"qL0KmmYi";
-    item_id += std::to_wstring(index);
-    return item_id.c_str();
+    // 使用成员变量缓存, 保证每个 LStockItem 实例有独立且稳定的 ID。
+    // 旧实现使用 static 局部变量, 所有实例共享同一块内存, 在多只股票时 ID 会被覆盖,
+    // 导致 TrafficMonitor 主程序中显示项冲突/错位。
+    m_itemId = L"qL0KmmYi";
+    m_itemId += std::to_wstring(index);
+    return m_itemId.c_str();
 }
 
 const wchar_t *LStockItem::GetItemLableText() const

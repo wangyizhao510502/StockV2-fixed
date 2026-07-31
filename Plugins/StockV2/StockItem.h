@@ -9,6 +9,9 @@ public:
 private:
     CString GetDisplayContent(wxSharedPtr<STOCK::LStockData> data, bool include_name) const;
 
+    // 缓存本显示项的唯一ID, 避免使用 static 局部变量导致所有实例共享同一内存。
+    mutable std::wstring m_itemId;
+
 public:
     /**
      * @brief   获取显示项目的名称

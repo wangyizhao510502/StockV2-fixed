@@ -619,14 +619,25 @@ void LStockPlugin::LoadDisplayItems()
     {
         item.enable = false;
     }
-    // 【修复】原实现未做上界检查, 当股票数量超过 m_displayStocks 容量(STOCK_DISPLAY_ITEM_MAX)
-    // 时会发生堆越界写。此处取两者较小值。
+
     const size_t code_count = g_data.GetAllCodes().size();
-    const size_t count = code_count < m_displayStocks.size() ? code_count : m_displayStocks.size();
-    for (size_t i = 0; i < count; ++i)
+    if (code_count == 0)
     {
-        m_displayStocks[i].index = static_cast<int>(i);
-        m_displayStocks[i].enable = true;
+        // 未配置股票时提供一个占位项, 使用户仍能在 TrafficMonitor"显示设置"里看到插件条目,
+        // 避免"加载成功但找不到选项"的困惑。
+        m_displayStocks[0].index = -1;
+        m_displayStocks[0].enable = true;
+    }
+    else
+    {
+        // 【修复】原实现未做上界检查, 当股票数量超过 m_displayStocks 容量(STOCK_DISPLAY_ITEM_MAX)
+        // 时会发生堆越界写。此处取两者较小值。
+        const size_t count = code_count < m_displayStocks.size() ? code_count : m_displayStocks.size();
+        for (size_t i = 0; i < count; ++i)
+        {
+            m_displayStocks[i].index = static_cast<int>(i);
+            m_displayStocks[i].enable = true;
+        }
     }
 }
 
@@ -635,11 +646,8 @@ IPluginItem *LStockPlugin::GetItem(int index)
     AFX_MANAGE_STATE_MODULE();
 
     // 不支持动态创建
-    size_t item_size = m_displayStocks.size();
-    if (g_data.GetAllCodes().size() < item_size)
-        item_size = g_data.GetAllCodes().size();
-    // if (item_size == 0)
-    //     item_size = 1;
+    const size_t code_count = g_data.GetAllCodes().size();
+    size_t item_size = code_count == 0 ? 1 : (code_count < m_displayStocks.size() ? code_count : m_displayStocks.size());
     if (index >= item_size)
         return nullptr;
     return &(m_displayStocks[index]);
