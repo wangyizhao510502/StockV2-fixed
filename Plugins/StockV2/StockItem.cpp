@@ -120,18 +120,24 @@ void LStockItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode)
     CRect rect(CPoint(x, y), CSize(w, h));
 
     // 文本颜色
-    COLORREF color_default;
+    // TrafficMonitor 在调用 DrawItem 前会将当前主题文本颜色设置到 DC 中，
+    // 交易名称使用这个颜色以保持和主程序其他项目一致；
+    // 价格和涨跌幅仍按涨跌显示红/绿色。
+    COLORREF color_default = pDC->GetTextColor();
+    if (color_default == CLR_INVALID)
+    {
+        color_default = dark_mode ? RGB(255, 255, 255) : RGB(0, 0, 0);
+    }
+
     COLORREF color_red;
     COLORREF color_green;
     if (dark_mode)
     {
-        color_default = RGB(255, 255, 255);
         color_red = RGB(255, 121, 120);
         color_green = RGB(111, 215, 149);
     }
     else
     {
-        color_default = RGB(0, 0, 0);
         color_red = RGB(195, 0, 0);
         color_green = RGB(46, 139, 87);
     }
