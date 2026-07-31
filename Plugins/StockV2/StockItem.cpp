@@ -11,7 +11,8 @@ const wchar_t *LStockItem::GetItemName() const
     }
     auto data = g_data.GetStockByIndex(index);
     if (data) {
-        return data->name;
+        m_displayName = std::wstring(data->GetDisplayName().wc_str());
+        return m_displayName.c_str();
     }
     return UtilResHlp.StringRes(IDS_LOADING);
 }
@@ -48,7 +49,7 @@ CString LStockItem::GetDisplayContent(wxSharedPtr<STOCK::LStockData> data, bool 
     }
     wxString content;
     if (include_name)
-        content = content + data->name + ": ";
+        content = content + data->GetDisplayName() + ": ";
     content += g_data.IsPriorityDisplayChanged() ? data->GetChangePrice() : data->GetCurrentPrice();
     content += " ";
     content += data->changeFluctuation;
@@ -102,7 +103,7 @@ void LStockItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode)
     {
         // 绘制名称
         pDC->SetTextColor(color_default);
-        CString displayContent = (data->name + ": ").wc_str();
+        CString displayContent = (data->GetDisplayName() + ": ").wc_str();
         CRect rect_name{ rect };
         rect_name.right = rect_name.left + pDC->GetTextExtent(displayContent).cx;
         pDC->DrawText(displayContent, rect_name, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);

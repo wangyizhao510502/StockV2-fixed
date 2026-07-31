@@ -1283,10 +1283,18 @@ namespace STOCK
             copy_decimals.Replace(CFG_REPLACE_STR, ",");
         }
 
+        wxString copy_custom_name = wxEmptyString;
+        if (cfg.size() > 5)
+        {
+            copy_custom_name = cfg[5];
+            copy_custom_name.Replace(CFG_REPLACE_STR, ",");
+        }
+
         code = copy_code;
         name = copy_name;
         type = copy_type;
         url = copy_url;
+        customName = copy_custom_name;
         if (copy_decimals.empty())
         {
             decimals = DEFAULT_DECIMAL_PLACES;
@@ -1316,12 +1324,15 @@ namespace STOCK
         wxString copy_url = wxString(url);
         copy_url.Replace(",", CFG_REPLACE_STR, true);
         wxString copy_decimals = wxString::Format("%d", decimals);
+        wxString copy_custom_name = wxString(customName);
+        copy_custom_name.Replace(",", CFG_REPLACE_STR, true);
         wxArrayString cfg;
         cfg.push_back(copy_code);
         cfg.push_back(copy_name);
         cfg.push_back(copy_type);
         cfg.push_back(copy_url);
         cfg.push_back(copy_decimals);
+        cfg.push_back(copy_custom_name);
         return UtilStringHlp::vectorJoinString(cfg, ",");
     }
 
@@ -1667,7 +1678,7 @@ namespace STOCK
             variant = data->GetDisplayMarket();
             break;
         case Col_NameText:
-            variant = data->name;
+            variant = data->GetDisplayName();
             break;
         case Col_CodeText:
             variant = data->code;
@@ -1708,6 +1719,14 @@ namespace STOCK
         auto data = m_row_data[row];
         switch (col)
         {
+        case Col_NameText:
+        {
+            wxString newName = variant.GetString();
+            newName.Trim(true).Trim(false);
+            // 允许清空，清空后回退到原始 name
+            data->customName = newName;
+            return true;
+        }
         case Col_DecimalsText:
             long val = variant.GetLong();
             if (val > MAX_DECIMAL_PLACES || val < MIN_DECIMAL_PLACES)

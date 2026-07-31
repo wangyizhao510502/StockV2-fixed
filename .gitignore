@@ -352,3 +352,5 @@ MigrationBackup/
 # vscode
 .vscode/
 build*_logs.zip
+StockV2_fixed_x64_run*.zip
+dist_run*/

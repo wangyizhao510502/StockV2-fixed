@@ -202,9 +202,16 @@ namespace STOCK
         wxString code;
         wxString url;
         unsigned int decimals; // 小数点位数
+        wxString customName;   // 用户自定义显示名称, 为空时使用 name
 
         wxString changePrice;       // change
         wxString changeFluctuation; // percent
+
+    public:
+        wxString GetDisplayName() const
+        {
+            return customName.empty() ? name : customName;
+        }
 
     private:
         Price open;           // 今日开盘价

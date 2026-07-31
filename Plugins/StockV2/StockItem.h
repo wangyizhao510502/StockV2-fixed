@@ -11,6 +11,8 @@ private:
 
     // 缓存本显示项的唯一ID, 避免使用 static 局部变量导致所有实例共享同一内存。
     mutable std::wstring m_itemId;
+    // 缓存当前显示名称(优先使用用户自定义名称), 保证返回的 const wchar_t* 稳定有效。
+    mutable std::wstring m_displayName;
 
 public:
     /**

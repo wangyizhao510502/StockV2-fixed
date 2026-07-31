@@ -256,7 +256,7 @@ namespace LStockViewer
         yyjson_mut_val* root = yyjson_mut_obj(doc);
         yyjson_mut_doc_set_root(doc, root);
 
-        wxScopedCharBuffer utf8Name = m_stock->name.ToUTF8();
+        wxScopedCharBuffer utf8Name = m_stock->GetDisplayName().ToUTF8();
         yyjson_mut_obj_add_strcpy(doc, root, "title", utf8Name.data());
         yyjson_mut_obj_add_strcpy(doc, root, "code", m_stock->code.ToUTF8());
 

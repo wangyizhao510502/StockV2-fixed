@@ -96,7 +96,7 @@ void LStockOptionView::InitUI()
     wxDataViewColumn *const colName = m_stockListCtrl->AppendTextColumn(
         wxT("交易名称"),
         STOCK::LStockListVM::Col_NameText,
-        wxDATAVIEW_CELL_INERT,
+        wxDATAVIEW_CELL_EDITABLE,
         wxCOL_WIDTH_AUTOSIZE,
         wxALIGN_NOT,
         col_flag);
@@ -529,14 +529,15 @@ void LStockOptionView::OnStockListItemActivated(wxDataViewEvent &event)
         return;
     }
     unsigned int column = event.GetColumn();
-    if (column != STOCK::LStockListVM::Col_DecimalsText)
+    if (column != STOCK::LStockListVM::Col_NameText &&
+        column != STOCK::LStockListVM::Col_DecimalsText)
     {
         return;
     }
     WXUINT row = m_solVM->GetRow(item);
     if (row >= 0)
     {
-        m_stockListCtrl->EditItem(item, m_stockListCtrl->GetColumn(STOCK::LStockListVM::Col_DecimalsText));
+        m_stockListCtrl->EditItem(item, m_stockListCtrl->GetColumn(column));
     }
 }
 
