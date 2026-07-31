@@ -8,22 +8,9 @@
 #include <memory>
 #include <windows.h>
 
-// Win32 临界区 RAII 锁：替代 std::lock_guard<std::recursive_mutex>。
-// 彻底规避 std::mutex/recursive_mutex 在「静态链接第三方库 / 跨 STL 版本」场景下
-// 走 MSVCP140 的 Mtx_destroy 时因 ABI 不一致导致的启动崩溃(本插件真实事故根因)。
-// CRITICAL_SECTION 同线程可重入, 与 recursive_mutex 等价。
-class CSCriticalSectionLock
-{
-public:
-    explicit CSCriticalSectionLock(CRITICAL_SECTION *cs) : m_cs(cs) { EnterCriticalSection(m_cs); }
-    ~CSCriticalSectionLock() { LeaveCriticalSection(m_cs); }
-
-    CSCriticalSectionLock(const CSCriticalSectionLock &) = delete;
-    CSCriticalSectionLock &operator=(const CSCriticalSectionLock &) = delete;
-
-private:
-    CRITICAL_SECTION *m_cs;
-};
+// 注: CSCriticalSectionLock(Win32 临界区 RAII 锁, 替代 std::lock_guard<recursive_mutex>)
+// 已在 Logger.h 中定义, 并经 pch.h 引入本头文件, 此处不再重复定义, 以免同一翻译单元
+// 内出现类重定义编译错误(即本插件此前 GitHub Actions step "Build StockV2" 失败的根因)。
 
 #define g_task LTaskManager::Instance()
 
