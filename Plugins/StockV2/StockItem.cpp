@@ -155,7 +155,7 @@ void LStockItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode)
         rect_remain.left = rect_name.right + COLUMN_SPACING;
     }
 
-    // 绘制价格（保留小数）：按最大宽度右对齐，使该列右边缘统一。
+    // 绘制价格（保留小数）：左对齐，该列左边缘与名称右边缘统一。
     wxString priceText = g_data.IsPriorityDisplayChanged() ? data->GetChangePrice() : data->GetCurrentPrice();
 
     if (g_data.IsDisplayColor())
@@ -173,7 +173,7 @@ void LStockItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode)
 
     CRect rect_price{ rect_remain };
     rect_price.right = rect_price.left + priceWidth;
-    pDC->DrawText(priceText.wc_str(), rect_price, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT);
+    pDC->DrawText(priceText.wc_str(), rect_price, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT);
 
     // 绘制涨跌幅：在价格列右侧固定间距处左对齐，使涨跌幅列左边缘统一。
     CRect rect_change{ rect_remain };
