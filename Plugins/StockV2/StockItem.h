@@ -7,7 +7,9 @@ public:
     bool enable;
 
 private:
-    CString GetDisplayContent(wxSharedPtr<STOCK::LStockData> data, bool include_name) const;
+    // 计算名称、价格、涨跌幅三列在当前 DC 字体下的最大宽度，
+    // 用于让多只股票实例之间按列对齐显示。
+    void CalculateColumnWidths(CDC* pDC, int& nameWidth, int& priceWidth, int& changeWidth) const;
 
     // 缓存本显示项的唯一ID, 避免使用 static 局部变量导致所有实例共享同一内存。
     mutable std::wstring m_itemId;

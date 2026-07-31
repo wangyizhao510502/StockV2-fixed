@@ -42,18 +42,44 @@ bool LStockItem::IsCustomDraw() const
     return true;
 }
 
-CString LStockItem::GetDisplayContent(wxSharedPtr<STOCK::LStockData> data, bool include_name) const
+void LStockItem::CalculateColumnWidths(CDC* pDC, int& nameWidth, int& priceWidth, int& changeWidth) const
 {
-    if (data == nullptr) {
-        return L"";
+    nameWidth = 0;
+    priceWidth = 0;
+    changeWidth = 0;
+
+    bool includeName = g_data.IsDisplayName();
+    auto allStocks = g_data.AllStocks();
+    for (const auto& stock : allStocks)
+    {
+        if (!stock)
+        {
+            continue;
+        }
+
+        if (includeName)
+        {
+            wxString nameText = stock->GetDisplayName() + wxT(": ");
+            CSize nameSize = pDC->GetTextExtent(nameText.wc_str());
+            if (nameSize.cx > nameWidth)
+            {
+                nameWidth = nameSize.cx;
+            }
+        }
+
+        wxString priceText = g_data.IsPriorityDisplayChanged() ? stock->GetChangePrice() : stock->GetCurrentPrice();
+        CSize priceSize = pDC->GetTextExtent(priceText.wc_str());
+        if (priceSize.cx > priceWidth)
+        {
+            priceWidth = priceSize.cx;
+        }
+
+        CSize changeSize = pDC->GetTextExtent(stock->changeFluctuation.wc_str());
+        if (changeSize.cx > changeWidth)
+        {
+            changeWidth = changeSize.cx;
+        }
     }
-    wxString content;
-    if (include_name)
-        content = content + data->GetDisplayName() + ": ";
-    content += g_data.IsPriorityDisplayChanged() ? data->GetChangePrice() : data->GetCurrentPrice();
-    content += " ";
-    content += data->changeFluctuation;
-    return content.wc_str();
 }
 
 int LStockItem::GetItemWidthEx(void* hDC) const
@@ -61,10 +87,22 @@ int LStockItem::GetItemWidthEx(void* hDC) const
     CDC* pDC = CDC::FromHandle((HDC)hDC);
 
     auto data = g_data.GetStockByIndex(index);
+    if (data == nullptr)
+    {
+        return 0;
+    }
 
-    int width = pDC->GetTextExtent(GetDisplayContent(data, g_data.IsDisplayName())).cx;
+    int nameWidth = 0, priceWidth = 0, changeWidth = 0;
+    CalculateColumnWidths(pDC, nameWidth, priceWidth, changeWidth);
 
-    LLOG_DEBUG("GetItemWidthEx: %d", width);
+    const int COLUMN_SPACING = 8;
+    int width = priceWidth + COLUMN_SPACING + changeWidth;
+    if (g_data.IsDisplayName() && nameWidth > 0)
+    {
+        width += nameWidth + COLUMN_SPACING;
+    }
+
+    LLOG_DEBUG("GetItemWidthEx: name=%d price=%d change=%d total=%d", nameWidth, priceWidth, changeWidth, width);
     return width;
 }
 
@@ -98,20 +136,28 @@ void LStockItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode)
         color_green = RGB(46, 139, 87);
     }
 
-    CRect rect_value{ rect };
-    if (g_data.IsDisplayName())
-    {
-        // 绘制名称
-        pDC->SetTextColor(color_default);
-        CString displayContent = (data->GetDisplayName() + ": ").wc_str();
-        CRect rect_name{ rect };
-        rect_name.right = rect_name.left + pDC->GetTextExtent(displayContent).cx;
-        pDC->DrawText(displayContent, rect_name, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+    const int COLUMN_SPACING = 8;
 
-        rect_value.left = rect_name.right;
+    int nameWidth = 0, priceWidth = 0, changeWidth = 0;
+    CalculateColumnWidths(pDC, nameWidth, priceWidth, changeWidth);
+
+    CRect rect_remain{ rect };
+
+    // 绘制名称：按所有股票中最大宽度右对齐，使冒号位置统一。
+    if (g_data.IsDisplayName() && nameWidth > 0)
+    {
+        pDC->SetTextColor(color_default);
+        CString displayContent = (data->GetDisplayName() + wxT(": ")).wc_str();
+        CRect rect_name{ rect_remain };
+        rect_name.right = rect_name.left + nameWidth;
+        pDC->DrawText(displayContent, rect_name, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT);
+
+        rect_remain.left = rect_name.right + COLUMN_SPACING;
     }
 
-    // 绘制数值
+    // 绘制价格（保留小数）：按最大宽度右对齐，使该列右边缘统一。
+    wxString priceText = g_data.IsPriorityDisplayChanged() ? data->GetChangePrice() : data->GetCurrentPrice();
+
     if (g_data.IsDisplayColor())
     {
         bool isUp = data->changeFluctuation.find('+') != wxString::npos;
@@ -125,10 +171,15 @@ void LStockItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode)
         pDC->SetTextColor(color_default);
     }
 
-    UINT flags = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
-    if (g_data.IsDisplayRightAlign())
-        flags |= DT_RIGHT;
-    pDC->DrawText(GetDisplayContent(data, false), rect_value, flags);
+    CRect rect_price{ rect_remain };
+    rect_price.right = rect_price.left + priceWidth;
+    pDC->DrawText(priceText.wc_str(), rect_price, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT);
+
+    // 绘制涨跌幅：在价格列右侧固定间距处左对齐，使涨跌幅列左边缘统一。
+    CRect rect_change{ rect_remain };
+    rect_change.left = rect_price.right + COLUMN_SPACING;
+    rect_change.right = rect_change.left + changeWidth;
+    pDC->DrawText(data->changeFluctuation.wc_str(), rect_change, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT);
 }
 
 const wchar_t *LStockItem::GetItemValueSampleText() const
